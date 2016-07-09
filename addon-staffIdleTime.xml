@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="staffIdleTime" title="[kiror] Staff idle time" version_string="0.0" version_id="0" url="https://github.com/adlerosn/" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
+  <admin_navigation/>
+  <admin_permissions/>
+  <admin_style_properties/>
+  <admin_templates>
+    <template title="kiror_staff_idle_time"><![CDATA[<xen:title>{xen:phrase staff_idle}</xen:title>
+<xen:require css="kiror_staff_idle_time.css" />
+<table class="staffIdleTable">
+	<tr class="staffIdleLine">
+		<th class="staffIdleCell">User ID</th>
+		<th class="staffIdleCell">Username</th>
+		<th class="staffIdleCell">Last activity</th>
+		<th class="staffIdleCell">Seconds away</th>
+		<th class="staffIdleCell">Minutes away</th>
+		<th class="staffIdleCell">Hours away</th>
+		<th class="staffIdleCell">Days away</th>
+		<th class="staffIdleCell">Weeks away</th>
+		<th class="staffIdleCell">Months away</th>
+	</tr>
+	<xen:foreach loop="$staffs" value="$staff">
+	<tr class="staffIdleLine">
+		<td class="staffIdleCell">             {$staff.user_id}</td>
+		<td class="staffIdleCell">             {$staff.username}</td>
+		<td class="staffIdleCell" title="{$staff.last_activity}">{$staff.last_activity_fmt}</td>
+		<td class="staffIdleCell allignRight">{$staff.inactivity_seconds}</td>
+		<td class="staffIdleCell allignRight">{$staff.inactivity_minutes}</td>
+		<td class="staffIdleCell allignRight">{$staff.inactivity_hours}</td>
+		<td class="staffIdleCell allignRight">{$staff.inactivity_days}</td>
+		<td class="staffIdleCell allignRight">{$staff.inactivity_weeks}</td>
+		<td class="staffIdleCell allignRight">{$staff.inactivity_months}</td>
+	</tr>
+	</xen:foreach>
+</table>
+<p>
+<a class="button" href="{xen:adminlink 'staffidle','', 'downloadmode=json'}">Download as JSON</a>
+</p>]]></template>
+    <template title="kiror_staff_idle_time.css"><![CDATA[.staffIdleTable {
+	width: 100%;
+}
+
+.staffIdleTable, .staffIdleCell {
+	border: 1px solid {xen:property primaryDarker};
+}
+
+.staffIdleCell {
+	padding: 2px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+tr.staffIdleLine:nth-child(even) {
+	background-color: {xen:property primaryLightest};
+}
+
+tr.staffIdleLine:nth-child(odd) {
+	background-color: {xen:property primaryLighterStill};
+}
+
+th.staffIdleCell {
+	font-weight: bold;
+	background-color: {xen:property primaryMedium};
+	color: {xen:property primaryLightest};
+}
+
+td.allignRight {
+	text-align: right;
+}]]></template>
+  </admin_templates>
+  <admin_template_modifications>
+    <modification template="home" modification_key="addlinkathomeforstafftimeaway" description="Add link at home for staff time away" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[<!-- slot: pre_nodes -->]]></find>
+      <replace><![CDATA[$0
+
+		<!-- slot: staff_ta --><li>
+		<a href="{xen:adminlink 'staffidle'}" class="cron">
+			<span class="icon"><span></span></span>
+			<span class="linkText">{xen:phrase staff_idle}</span>
+			</a></li>]]></replace>
+    </modification>
+  </admin_template_modifications>
+  <code_events/>
+  <code_event_listeners/>
+  <cron/>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups/>
+  <permissions>
+    <permission_groups/>
+    <permissions/>
+    <interface_groups/>
+  </permissions>
+  <phrases>
+    <phrase title="staff_idle" version_id="0" version_string="0.0"><![CDATA[Staff idle time]]></phrase>
+  </phrases>
+  <route_prefixes>
+    <route_type type="admin">
+      <prefix original_prefix="staffidle" class="staffIdleTime_router" build_link="none"/>
+    </route_type>
+  </route_prefixes>
+  <style_properties/>
+  <templates/>
+  <public_template_modifications/>
+  <bb_code_media_sites/>
+  <bb_codes/>
+</addon>
