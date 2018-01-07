@@ -1,37 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="staffIdleTime" title="[kiror] Staff idle time" version_string="0.0" version_id="0" url="https://github.com/adlerosn/" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
+<addon addon_id="staffIdleTime" title="[kiror] Staff idle time" version_string="0.1" version_id="1" url="https://github.com/adlerosn/" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
   <admin_navigation/>
   <admin_permissions/>
   <admin_style_properties/>
   <admin_templates>
     <template title="kiror_staff_idle_time"><![CDATA[<xen:title>{xen:phrase staff_idle}</xen:title>
+<xen:h1>{xen:phrase staff_idle}: <span class="tableContextOnTitle">PLACEHOLDER</span></xen:h1>
 <xen:require css="kiror_staff_idle_time.css" />
+
+<script>
+dynamictable = {
+	"data": {xen:helper json,$staffs},
+	"labels_ndxs": {xen:helper json,$contexts},
+	"labels": {
+		"account":"Account",
+		"forum"  :"Forum",
+		"chat"   :"Chat",
+	},
+	"times_ndxs": ['Seconds','Hours','Days','Weeks','Months'],
+	"times": {
+		"Seconds":1,
+		"Hours":  3600,
+		"Days":   3600*24,
+		"Weeks":  3600*24*7,
+		"Months": 3600*24*30,
+	},
+	"current": {
+		"tms": "Days",
+		"ctx": "account",
+	},
+};
+<xen:include template="kiror_staff_idle_time.js" />
+</script>
+
 <table class="staffIdleTable">
+<thead>
 	<tr class="staffIdleLine">
 		<th class="staffIdleCell">User ID</th>
 		<th class="staffIdleCell">Username</th>
 		<th class="staffIdleCell">Last activity</th>
-		<th class="staffIdleCell">Seconds away</th>
-		<th class="staffIdleCell">Minutes away</th>
-		<th class="staffIdleCell">Hours away</th>
-		<th class="staffIdleCell">Days away</th>
-		<th class="staffIdleCell">Weeks away</th>
-		<th class="staffIdleCell">Months away</th>
+		<th class="staffIdleCell"><span class="jsplaceholder-thead">JS_PLACEHOLDER</span> away</th>
 	</tr>
+</thead>
+<tbody>
 	<xen:foreach loop="$staffs" value="$staff">
 	<tr class="staffIdleLine">
-		<td class="staffIdleCell">             {$staff.user_id}</td>
-		<td class="staffIdleCell">             {$staff.username}</td>
-		<td class="staffIdleCell" title="{$staff.last_activity}">{$staff.last_activity_fmt}</td>
-		<td class="staffIdleCell allignRight">{$staff.inactivity_seconds}</td>
-		<td class="staffIdleCell allignRight">{$staff.inactivity_minutes}</td>
-		<td class="staffIdleCell allignRight">{$staff.inactivity_hours}</td>
-		<td class="staffIdleCell allignRight">{$staff.inactivity_days}</td>
-		<td class="staffIdleCell allignRight">{$staff.inactivity_weeks}</td>
-		<td class="staffIdleCell allignRight">{$staff.inactivity_months}</td>
+		<td class="staffIdleCell">{$staff.user_id}</td>
+		<td class="staffIdleCell">{$staff.username}</td>
+		<td class="staffIdleCell"><span class="jsplaceholder-tbody-la-{$staff.user_id}">JS_PLACEHOLDER</span></td>
+		<td class="staffIdleCell allignRight"><span class="jsplaceholder-tbody-te-{$staff.user_id}">JS_PLACEHOLDER</span></td>
 	</tr>
 	</xen:foreach>
+</tbody>
 </table>
+<p>
+<h3 class="importantMessage" style="text-align:left;">
+Context: <span class="contextJsSelector"></span>
+</h3>
+</p>
+<p>
+<h3 class="importantMessage" style="text-align:left;">
+Time: <span class="timeJsSelector"></span>
+</h3>
+</p>
 <p>
 <a class="button" href="{xen:adminlink 'staffidle','', 'downloadmode=json'}">Download as JSON</a>
 </p>]]></template>
@@ -66,6 +97,97 @@ th.staffIdleCell {
 td.allignRight {
 	text-align: right;
 }]]></template>
+    <template title="kiror_staff_idle_time.js"><![CDATA[function NodeList2Array(nl){
+	var arr = [];
+	for(var i = 0, elem; elem = nl[i]; i++) arr.push(elem);
+	return arr;
+};
+
+function dynamictableSort(){
+	var a = NodeList2Array(document.querySelectorAll('tbody tr.staffIdleLine td:nth-child(1)'));
+	var b = [];
+	a.forEach(function(e){
+		b.push(parseInt(e.textContent));
+	});
+	var c = [];
+	b.forEach(function(e){
+		c.push([0,e]);
+	});
+	dynamictable['data'].forEach(function(e){
+		var i = b.indexOf(e['user_id']);
+		c[i][0] = e['last_activity'][dynamictable['current']['ctx']]['val']
+	});
+	c.sort();
+	c.reverse();
+	r = {};
+	a.forEach(function(e){
+		r[parseInt(e.textContent)]=e.parentNode;
+	});
+	var t = document.querySelector('table.staffIdleTable tbody');
+	//console.log(c);
+	//console.log(r);
+	c.forEach(function(e){
+		t.removeChild(r[e[1]]);
+		t.appendChild(r[e[1]]);
+	});
+}
+
+function dynamictableSetData(){
+	dynamictable['data'].forEach(function(e){
+		//console.log('jsplaceholder-tbody-la-'+e['user_id']);
+		document.querySelector('.jsplaceholder-tbody-la-'+e['user_id']).innerHTML=
+			e['last_activity'][dynamictable['current']['ctx']]['fmt'];
+		document.querySelector('.jsplaceholder-tbody-te-'+e['user_id']).innerHTML=
+			(
+			(
+			parseInt(((new Date()).getTime()/1e3).toFixed(0))-
+			e['last_activity'][dynamictable['current']['ctx']]['val']
+			)
+			/dynamictable['times'][dynamictable['current']['tms']]
+			).toFixed(2);
+	});
+	dynamictableSort();
+};
+
+function dynamictableSetTime(label){
+	dynamictable['current']['tms']=label;
+	dynamictableInitButtons();
+	dynamictableSetData();
+};
+
+function dynamictableSetCtx(label){
+	dynamictable['current']['ctx']=label;
+	dynamictableInitButtons();
+	dynamictableSetData();
+};
+
+function dynamictableInitButtons(){
+	var b = '';
+	dynamictable['times_ndxs'].forEach(function(e){
+		var v = dynamictable['times'][e];
+		//console.log(e,v);
+		b+='<a href="javascript: dynamictableSetTime(\''+e+'\')" '+
+			'class="button'+((dynamictable['current']['tms']==e)?' primary':'')+'">'+e+'</a>';
+	});
+	document.querySelector('.timeJsSelector').innerHTML = b;
+	
+	var b = '';
+	dynamictable['labels_ndxs'].forEach(function(e){
+		var v = dynamictable['labels'][e];
+		//console.log(e,v);
+		b+='<a href="javascript: dynamictableSetCtx(\''+e+'\')" '+
+			'class="button'+((dynamictable['current']['ctx']==e)?' primary':'')+'">'+v+'</a>';
+	});
+	document.querySelector('.contextJsSelector').innerHTML = b;
+	document.querySelector('.tableContextOnTitle').innerHTML = dynamictable['labels'][dynamictable['current']['ctx']];
+	document.querySelector('.jsplaceholder-thead').innerHTML = dynamictable['current']['tms'];
+};
+
+function dynamictableStartup(){
+	dynamictableInitButtons();
+	dynamictableSetData();
+};
+setTimeout(function(){dynamictableStartup();},100);]]></template>
   </admin_templates>
   <admin_template_modifications>
     <modification template="home" modification_key="addlinkathomeforstafftimeaway" description="Add link at home for staff time away" execution_order="10" enabled="1" action="str_replace">
